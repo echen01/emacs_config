@@ -1,0 +1,458 @@
+#+STARTUP: overview
+* interface tweaks
+#+BEGIN_SRC emacs-lisp
+      (setq inhibit-startup-message t)
+      ;;(setq initial-buffer-choice "~/Documents/Notes/Spring21.org")
+      ;; (global-linum-mode)
+      ;;(defalias 'list-buffers 'ibuffer-other-window) ; make ibuffer default
+      (defalias 'yes-or-no-p 'y-or-n-p)
+      (column-number-mode 1)
+      (show-paren-mode 1)
+      (toggle-scroll-bar -1)
+      (tool-bar-mode -1)
+      (global-set-key (kbd "<f5>") 'compile)
+      (setq backup-directory-alist '(("." . "~/.emacs.d/backup"))
+	    backup-by-copying      t  ; Don't de-link hard links
+	    version-control        t  ; Use version numbers on backups
+	    delete-old-versions    t  ; Automatically delete excess backups:
+	    kept-new-versions      20 ; how many of the newest versions to keep
+	    kept-old-versions      5) ; and how many of the old
+      ;;(setq shell-command-switch "-ic")
+
+    ;; obsolete workaround for emacs 28
+  ;; (defun wrap-obsolete (orig-fn &rest args)
+  ;;   (let ((args_ (if (= (length args) 2)
+  ;;                    (append args (list "0"))
+  ;;                  args)))
+  ;;     (apply orig-fn args_)))
+
+  ;;(advice-add 'define-obsolete-function-alias :around #'wrap-obsolete)
+#+END_SRC
+* ibuffer
+#+BEGIN_SRC emacs-lisp
+    (global-set-key (kbd "C-x C-b") 'ibuffer)
+    (setq ibuffer-saved-filter-groups
+    (quote (("default"
+
+    ("Org" (name . "^.*org$"))
+    ("Dired" (mode . dired-mode))
+    ("Agenda" (or (mode . org-agenda-mode) (mode . calendar-mode) (mode . diary-mode)))
+    ("Web" (or (mode . web-mode) (mode . js2-mode) (mode . svelte-mode)))
+    ("Shell" (or (mode . eshell-mode)
+    (mode . shell-mode)))
+    ("Toplevel" (or 
+    (mode . inferior-python-mode)
+    (mode . tuareg-interactive-mode)
+    (mode . utop-mode)
+  (mode . jupyter-repl-mode)
+    ))
+    ("Git" (or (name . "^.*md$") (mode . magit-status-mode) (name . ".gitignore")))
+    ("Programming" (or
+    (mode . python-mode)
+    (mode . c++-mode)
+    (mode . c-mode)
+    (mode . java-mode)
+    (mode . tuareg-mode)
+    (mode . julia-mode)
+    ))
+    ("Emacs" (or
+    (name . "^\\*scratch\\*$")
+    (name . "^\\*Messages\\*$")))
+    ))))
+    (add-hook 'ibuffer-mode-hook
+    (lambda ()
+    (ibuffer-auto-mode 1)
+    (ibuffer-switch-to-saved-filter-groups "default")))
+
+    ;; don't show these
+    ;(add-to-list 'ibuffer-never-show-predicates "zowie")
+    ;; Don't show filter groups if there are no buffers in that group
+    (setq ibuffer-show-empty-filter-groups nil)
+
+    ;; Don't ask for confirmation to delete marked buffers
+    (setq ibuffer-expert t)
+#+END_SRC
+* try
+#+BEGIN_SRC emacs-lisp
+(use-package try
+:ensure t)
+#+END_SRC
+ 
+* which key
+Brings up some help
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+	     :ensure t
+	     :config
+	     (which-key-mode))
+
+#+END_SRC
+
+* org mode
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "C-c a") 'org-agenda)
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook(lambda ()(org-bullets-mode 1))))
+(setq org-todo-keywords
+  '((sequence "TODO" "IN-PROGRESS" "WAITING" "DONE")))
+(setq org-agenda-files '("~/Documents/Notes"))
+(setq org-agenda-timegrid-use-ampm 1)
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)))
+#+END_SRC
+
+* user interface
+#+BEGIN_SRC emacs-lisp
+(use-package undo-tree
+:ensure t
+:init
+(global-undo-tree-mode))
+
+;; Swiper
+(use-package counsel
+:ensure t
+)
+
+(use-package swiper
+:ensure try
+:config
+(progn
+(ivy-mode 1)
+(setq ivy-use-virtual-buffers t)
+(global-set-key "\C-s" 'swiper)
+(global-set-key (kbd "C-c C-r") 'ivy-resume)
+(global-set-key (kbd "<f6>") 'ivy-resume)
+(global-set-key (kbd "M-x") 'counsel-M-x)
+(global-set-key (kbd "C-x C-f") 'counsel-find-file)
+(global-set-key (kbd "<f1> f") 'counsel-describe-function)
+(global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+(global-set-key (kbd "<f1> l") 'counsel-load-library)
+(global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+(global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+(global-set-key (kbd "C-c g") 'counsel-git)
+(global-set-key (kbd "C-c j") 'counsel-git-grep)
+(global-set-key (kbd "C-c k") 'counsel-ag)
+(global-set-key (kbd "C-x l") 'counsel-locate)
+(global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
+(define-key read-expression-map (kbd "C-r") 'counsel-expression-history)
+))
+
+;;Window moving
+(add-hook 'text-mode-hook #'auto-fill-mode)
+(use-package ace-window
+  :ensure t
+  :init
+  (progn
+    (global-set-key [remap other-window] 'ace-window)
+    (custom-set-faces
+     '(aw-leading-char-face
+       ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+))
+#+END_SRC
+
+* tabs
+#+BEGIN_SRC emacs-lisp
+(use-package centaur-tabs
+  :ensure t
+  :demand
+  :config
+  (centaur-tabs-headline-match)
+  (setq centaur-tabs-style "bar"
+  centaur-tabs-set-bar 'left
+  centaur-tabs-set-icons t
+  centaur-tabs-height 32
+  centaur-tabs-plain-icons t)
+  (centaur-tabs-mode t)
+  )
+#+END_SRC
+* theme and style
+#+BEGIN_SRC emacs-lisp
+    (use-package doom-themes
+    :ensure t
+    :init
+    (load-theme 'doom-miramare t))
+
+    (use-package all-the-icons
+    :ensure t)
+      ;; (defun load-doom-theme (theme)
+      ;;   "Disable active themes and load a Doom theme."
+      ;;   (interactive (list (intern (completing-read "Theme: "
+      ;;                                               (->> (custom-available-themes)
+      ;;                                                    (-map #'symbol-name)
+      ;;                                                    (--select (string-prefix-p "doom-" it)))))))
+      ;;   (ap/switch-theme theme)
+
+      ;;   (set-face-foreground 'org-indent (face-background 'default)))
+
+    (defun switch-theme (theme)
+      "Disable active themes and load THEME."
+      (interactive (list (intern (completing-read "Theme: "
+						  (->> (custom-available-themes)
+						       (-map #'symbol-name))))))
+      (mapc #'disable-theme custom-enabled-themes)
+      (load-theme theme 'no-confirm))
+
+(use-package fira-code-mode
+  :custom (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x")) ;; List of ligatures to turn off
+  :hook prog-mode) ;; Enables fira-code-mode automatically for programming major modes
+
+#+END_SRC
+* treemacs
+#+BEGIN_SRC emacs-lisp
+(use-package treemacs
+  :ensure t
+  :defer t
+  :init
+  (with-eval-after-load 'winum
+    (define-key winum-keymap (kbd "M-0") #'treemacs-select-window))
+  :config
+  (progn
+    (setq treemacs-collapse-dirs                 (if treemacs-python-executable 3 0)
+          treemacs-deferred-git-apply-delay      0.5
+          treemacs-directory-name-transformer    #'identity
+          treemacs-display-in-side-window        t
+          treemacs-eldoc-display                 t
+          treemacs-file-event-delay              5000
+          treemacs-file-extension-regex          treemacs-last-period-regex-value
+          treemacs-file-follow-delay             0.2
+          treemacs-file-name-transformer         #'identity
+          treemacs-follow-after-init             t
+          treemacs-git-command-pipe              ""
+          treemacs-goto-tag-strategy             'refetch-index
+          treemacs-indentation                   2
+          treemacs-indentation-string            " "
+          treemacs-is-never-other-window         nil
+          treemacs-max-git-entries               5000
+          treemacs-missing-project-action        'ask
+          treemacs-move-forward-on-expand        nil
+          treemacs-no-png-images                 nil
+          treemacs-no-delete-other-windows       t
+          treemacs-project-follow-cleanup        nil
+          treemacs-persist-file                  (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
+          treemacs-position                      'left
+          treemacs-read-string-input             'from-child-frame
+          treemacs-recenter-distance             0.1
+          treemacs-recenter-after-file-follow    nil
+          treemacs-recenter-after-tag-follow     nil
+          treemacs-recenter-after-project-jump   'always
+          treemacs-recenter-after-project-expand 'on-distance
+          treemacs-show-cursor                   nil
+          treemacs-show-hidden-files             t
+          treemacs-silent-filewatch              nil
+          treemacs-silent-refresh                nil
+          treemacs-sorting                       'alphabetic-asc
+          treemacs-space-between-root-nodes      t
+          treemacs-tag-follow-cleanup            t
+          treemacs-tag-follow-delay              1.5
+          treemacs-user-mode-line-format         nil
+          treemacs-user-header-line-format       nil
+          treemacs-width                         35
+          treemacs-workspace-switch-cleanup      nil)
+
+    ;; The default width and height of the icons is 22 pixels. If you are
+    ;; using a Hi-DPI display, uncomment this to double the icon size.
+    ;;(treemacs-resize-icons 44)
+
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (treemacs-fringe-indicator-mode 'always)
+    (pcase (cons (not (null (executable-find "git")))
+                 (not (null treemacs-python-executable)))
+      (`(t . t)
+       (treemacs-git-mode 'deferred))
+      (`(t . _)
+       (treemacs-git-mode 'simple))))
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t 1"   . treemacs-delete-other-windows)
+        ("C-x t t"   . treemacs)
+        ("C-x t B"   . treemacs-bookmark)
+        ("C-x t C-t" . treemacs-find-file)
+        ("C-x t M-t" . treemacs-find-tag))
+
+
+
+  )
+
+(use-package treemacs-projectile
+  :after treemacs projectile
+  :ensure t)
+
+(use-package treemacs-icons-dired
+  :after treemacs dired
+  :ensure t
+  :config (treemacs-icons-dired-mode))
+
+(use-package treemacs-magit
+  :after treemacs magit
+  :ensure t)
+
+(use-package treemacs-persp ;;treemacs-persective if you use perspective.el vs. persp-mode
+  :after treemacs persp-mode ;;or perspective vs. persp-mode
+  :ensure t
+  :config (treemacs-set-scope-type 'Perspectives))
+#+END_SRC
+
+* python 
+#+BEGIN_SRC emacs-lisp
+  (use-package elpy
+    :ensure t
+    :init
+    (elpy-enable))
+  (use-package blacken
+    :ensure t
+    :init
+    (add-hook 'elpy-mode-hook 'blacken-mode))
+  (use-package flycheck
+    :ensure t
+    :init
+    (global-flycheck-mode t))
+  (when (require 'flycheck nil t)
+    (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+    (add-hook 'elpy-mode-hook 'flycheck-mode))
+
+  ;; (flycheck-define-checker python-pylint
+  ;;   "A Python syntax and style checker using Pylint.
+
+  ;; This syntax checker requires Pylint 1.0 or newer.
+
+  ;; See URL `https://www.pylint.org/'."
+  ;;   ;; --reports=n disables the scoring report.
+  ;;   ;; Not calling pylint directly makes it easier to switch between different
+  ;;   ;; Python versions; see https://github.com/flycheck/flycheck/issues/1055.
+  ;;   :command ("python3"
+  ;; 	    (eval (let ((result (flycheck-python-module-args
+  ;; 				 'python-pylint "pylint.epylint")))
+  ;; 		    (list (first result)
+  ;; 			  (concat (second result) "[\"Run\"]()"))))
+  ;; 	    ;; Need `source-inplace' for relative imports (e.g. `from .foo
+  ;; 	    ;; import bar'), see https://github.com/flycheck/flycheck/issues/280
+  ;; 	    source-inplace
+  ;; 	    "--reports=n"
+  ;; 	    "--output-format=json"
+  ;; 	    (config-file "--rcfile=" flycheck-pylintrc concat))
+  ;;   :error-parser flycheck-parse-pylint
+  ;;   :enabled (lambda ()
+  ;; 	     (or (not (flycheck-python-needs-module-p 'python-pylint))
+  ;; 		 (flycheck-python-find-module 'python-pylint "pylint")))
+  ;;   :verify (lambda (_) (flycheck-python-verify-module 'python-pylint "pylint"))
+  ;;   :modes python-mode
+  ;;   :next-checkers ((warning . python-mypy)))
+
+    (use-package conda
+      :ensure t
+      :init
+      (conda-env-initialize-interactive-shells)
+      (conda-env-initialize-eshell)
+      (setq conda-anaconda-home (expand-file-name "~/anaconda3"))
+      (setq conda-env-home-directory (expand-file-name "~/anaconda3"))
+      (conda-env-activate "cs6682")
+  )
+
+  ;;Use Ipython for repl
+    ;; (setq python-shell-interpreter "jupyter"
+    ;; 	python-shell-interpreter-args "console --simple-prompt"
+    ;; 	python-shell-prompt-detect-failure-warning nil)
+    ;; (add-to-list 'python-shell-completion-native-disabled-interpreters
+    ;; 	       "jupyter")
+
+#+END_SRC 
+
+* svelte
+#+BEGIN_SRC emacs-lisp
+(use-package svelte-mode
+  :ensure t
+  :init)
+(add-to-list 'auto-mode-alist '("\\.svx\\'" . svelte-mode))
+#+END_SRC
+
+* git
+#+BEGIN_SRC emacs-lisp
+(use-package magit
+:ensure t
+)
+
+(use-package git-gutter
+  :ensure t
+  :init
+  (global-git-gutter-mode +1))
+(use-package markdown-mode
+:ensure t
+:commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode)))
+#+END_SRC
+
+* Autocomplete
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package auto-complete
+  ;; :ensure t
+  ;; :init
+  ;; (progn
+  ;; (ac-config-default)
+  ;; (setq ac-modes '(c++-mode))
+  ;; ))
+
+#+END_SRC
+* OCaml
+#+BEGIN_SRC emacs-lisp
+  ;;  OCaml code
+
+    ;; (add-hook
+    ;;  'tuareg-mode-hook
+    ;;  (lambda ()
+    ;;    ;; Add opam emacs directory to the load-path
+    ;;    (setq opam-share
+    ;;      (substring
+    ;; 	(shell-command-to-string "opam config var share 2> /dev/null")
+    ;; 	0 -1))
+    ;;    (add-to-list 'load-path (concat opam-share "/emacs/site-lisp"))
+    ;;    ;; Load merlin-mode
+    ;;    (require 'merlin)
+    ;;    ;; Start merlin on ocaml files
+    ;;    (add-hook 'tuareg-mode-hook 'merlin-mode t)
+    ;;    (add-hook 'caml-mode-hook 'merlin-mode t)
+    ;;    ;; Enable auto-complete
+    ;;    (setq merlin-use-auto-complete-mode 'easy)
+    ;;    ;; Use opam switch to lookup ocamlmerlin binary
+    ;;    (setq merlin-command 'opam)
+    ;;    (company-mode)
+    ;;    (require 'ocp-indent)
+    ;;    (autoload 'utop-minor-mode "utop" "Minor mode for utop" t)
+    ;;    (autoload 'utop-setup-ocaml-buffer "utop" "Toplevel for OCaml" t)
+    ;;    (autoload 'merlin-mode "merlin" "Merlin mode" t)
+    ;;    (utop-minor-mode)
+    ;;    (company-quickhelp-mode)
+    ;;    ;; Important to note that setq-local is a macro and it needs to be
+    ;;    ;; separate calls, not like setq
+    ;;    (setq-local merlin-completion-with-doc t)
+    ;;    (setq-local indent-tabs-mode nil)
+    ;;    (setq-local show-trailing-whitespace t)
+    ;;    (setq-local indent-line-function 'ocp-indent-line)
+    ;;    (setq-local indent-region-function 'ocp-indent-region)
+    ;;    (if (equal system-type 'darwin)
+    ;; 	 (load-file "/Users/Edgar/.opam/working/share/emacs/site-lisp/ocp-indent.el")
+    ;;      (load-file "/home/gar/.opam/working/share/emacs/site-lisp/ocp-indent.el"))
+    ;;    (merlin-mode)))
+
+    ;; (add-hook 'utop-mode-hook (lambda ()
+    ;; 		  (set-process-query-on-exit-flag
+    ;; 		   (get-process "utop") nil)))
+    
+#+END_SRC
+* Java
+#+BEGIN_SRC emacs-lisp
+#+END_SRC
+* Julia
+#+BEGIN_SRC emacs-lisp
+(use-package julia-mode
+:ensure t
+
+)
+
+#+END_SRC
