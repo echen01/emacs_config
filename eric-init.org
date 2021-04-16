@@ -6,18 +6,18 @@
       ;; (global-linum-mode)
       ;;(defalias 'list-buffers 'ibuffer-other-window) ; make ibuffer default
       (defalias 'yes-or-no-p 'y-or-n-p)
-      (column-number-mode 1)
+      ;; (setq column-number-mode nil)
       (show-paren-mode 1)
       (toggle-scroll-bar -1)
       (tool-bar-mode -1)
       (global-set-key (kbd "<f5>") 'compile)
       (setq backup-directory-alist '(("." . "~/.emacs.d/backup"))
-	    backup-by-copying      t  ; Don't de-link hard links
-	    version-control        t  ; Use version numbers on backups
-	    delete-old-versions    t  ; Automatically delete excess backups:
-	    kept-new-versions      20 ; how many of the newest versions to keep
-	    kept-old-versions      5) ; and how many of the old
-      ;;(setq shell-command-switch "-ic")
+            backup-by-copying      t  ; Don't de-link hard links
+            version-control        t  ; Use version numbers on backups
+            delete-old-versions    t  ; Automatically delete excess backups:
+            kept-new-versions      20 ; how many of the newest versions to keep
+            kept-old-versions      5) ; and how many of the old
+      (setq shell-command-switch "-ic")
 
     ;; obsolete workaround for emacs 28
   ;; (defun wrap-obsolete (orig-fn &rest args)
@@ -34,19 +34,24 @@
     (setq ibuffer-saved-filter-groups
     (quote (("default"
 
-    ("Org" (name . "^.*org$"))
+    ("Org" (name . "^.*org$") (name . "^.*md$"))
     ("Dired" (mode . dired-mode))
     ("Agenda" (or (mode . org-agenda-mode) (mode . calendar-mode) (mode . diary-mode)))
-    ("Web" (or (mode . web-mode) (mode . js2-mode) (mode . svelte-mode)))
+    ("DocView" (or (mode . doc-view-mode)))
+    ("Web" (or 
+    (mode . web-mode)
+    (mode . html-mode)
+    (mode . js2-mode) 
+    (mode . svelte-mode)))
     ("Shell" (or (mode . eshell-mode)
     (mode . shell-mode)))
-    ("Toplevel" (or 
+    ("REPL" (or 
     (mode . inferior-python-mode)
     (mode . tuareg-interactive-mode)
     (mode . utop-mode)
   (mode . jupyter-repl-mode)
     ))
-    ("Git" (or (name . "^.*md$") (mode . magit-status-mode) (name . ".gitignore")))
+    ("Git" (or (mode . magit-status-mode) (name . ".gitignore")))
     ("Programming" (or
     (mode . python-mode)
     (mode . c++-mode)
@@ -102,6 +107,11 @@ Brings up some help
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((python . t)))
+(add-to-list 'org-file-apps '("\\.pdf" . "evince %s"))
+(dolist (hook '(org-mode-hook))
+(add-hook hook (lambda () (flyspell-mode 1))))
+(add-hook 'org-mode-hook (lambda () (org-indent-mode t)) t)
+(add-hook 'org-mode-hook (lambda () (visual-line-mode t)) t)
 #+END_SRC
 
 * user interface
@@ -166,38 +176,43 @@ Brings up some help
   centaur-tabs-height 32
   centaur-tabs-plain-icons t)
   (centaur-tabs-mode t)
+  :bind
+  ("M-[" . centaur-tabs-backward)
+  ("M-]" . centaur-tabs-forward)
+  ("C-c <C-up>" . centaur-tabs-backward-group)
+  ("C-c <C-down>" . centaur-tabs-forward-group)
   )
 #+END_SRC
 * theme and style
 #+BEGIN_SRC emacs-lisp
-    (use-package doom-themes
-    :ensure t
-    :init
-    (load-theme 'doom-miramare t))
+      (use-package doom-themes
+      :ensure t
+      :init
+      (load-theme 'doom-miramare t))
 
-    (use-package all-the-icons
-    :ensure t)
-      ;; (defun load-doom-theme (theme)
-      ;;   "Disable active themes and load a Doom theme."
-      ;;   (interactive (list (intern (completing-read "Theme: "
-      ;;                                               (->> (custom-available-themes)
-      ;;                                                    (-map #'symbol-name)
-      ;;                                                    (--select (string-prefix-p "doom-" it)))))))
-      ;;   (ap/switch-theme theme)
+      (use-package all-the-icons
+      :ensure t)
+	;; (defun load-doom-theme (theme)
+	;;   "Disable active themes and load a Doom theme."
+	;;   (interactive (list (intern (completing-read "Theme: "
+	;;                                               (->> (custom-available-themes)
+	;;                                                    (-map #'symbol-name)
+	;;                                                    (--select (string-prefix-p "doom-" it)))))))
+	;;   (ap/switch-theme theme)
 
-      ;;   (set-face-foreground 'org-indent (face-background 'default)))
+	;;   (set-face-foreground 'org-indent (face-background 'default)))
 
-    (defun switch-theme (theme)
-      "Disable active themes and load THEME."
-      (interactive (list (intern (completing-read "Theme: "
-						  (->> (custom-available-themes)
-						       (-map #'symbol-name))))))
-      (mapc #'disable-theme custom-enabled-themes)
-      (load-theme theme 'no-confirm))
+      (defun switch-theme (theme)
+	"Disable active themes and load THEME."
+	(interactive (list (intern (completing-read "Theme: "
+						    (->> (custom-available-themes)
+							 (-map #'symbol-name))))))
+	(mapc #'disable-theme custom-enabled-themes)
+	(load-theme theme 'no-confirm))
 
-(use-package fira-code-mode
-  :custom (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x")) ;; List of ligatures to turn off
-  :hook prog-mode) ;; Enables fira-code-mode automatically for programming major modes
+  (use-package fira-code-mode
+    :custom (fira-code-mode-disabled-ligatures '("[]" "#{" "#(" "#_" "#_(" "x")) ;; List of ligatures to turn off
+    :hook (tuareg-mode utop-mode python-mode)) ;; Enables fira-code-mode automatically for programming major modes
 
 #+END_SRC
 * treemacs
@@ -307,13 +322,6 @@ Brings up some help
     :ensure t
     :init
     (add-hook 'elpy-mode-hook 'blacken-mode))
-  (use-package flycheck
-    :ensure t
-    :init
-    (global-flycheck-mode t))
-  (when (require 'flycheck nil t)
-    (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
-    (add-hook 'elpy-mode-hook 'flycheck-mode))
 
   ;; (flycheck-define-checker python-pylint
   ;;   "A Python syntax and style checker using Pylint.
@@ -353,23 +361,28 @@ Brings up some help
       (conda-env-activate "cs6682")
   )
 
-  ;;Use Ipython for repl
-    ;; (setq python-shell-interpreter "jupyter"
-    ;; 	python-shell-interpreter-args "console --simple-prompt"
-    ;; 	python-shell-prompt-detect-failure-warning nil)
-    ;; (add-to-list 'python-shell-completion-native-disabled-interpreters
-    ;; 	       "jupyter")
+  ;; Use Ipython for repl
+    (setq python-shell-interpreter "jupyter"
+	  python-shell-interpreter-args "console --simple-prompt"
+	  python-shell-prompt-detect-failure-warning nil)
+    (add-to-list 'python-shell-completion-native-disabled-interpreters
+		 "jupyter")
 
 #+END_SRC 
 
-* svelte
+* flycheck
 #+BEGIN_SRC emacs-lisp
-(use-package svelte-mode
-  :ensure t
-  :init)
-(add-to-list 'auto-mode-alist '("\\.svx\\'" . svelte-mode))
-#+END_SRC
+  (use-package flycheck
+    :ensure t
+    :init)
+  (when (require 'flycheck nil t)
+    (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+    (add-hook 'elpy-mode-hook 'flycheck-mode))
 
+(add-hook 'org-mode-hook 'flycheck-mode)
+(add-hook 'markdown-mode-hook 'flycheck-mode)
+
+#+END_SRC
 * git
 #+BEGIN_SRC emacs-lisp
 (use-package magit
@@ -388,71 +401,39 @@ Brings up some help
          ("\\.markdown\\'" . markdown-mode)))
 #+END_SRC
 
-* Autocomplete
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package auto-complete
-  ;; :ensure t
-  ;; :init
-  ;; (progn
-  ;; (ac-config-default)
-  ;; (setq ac-modes '(c++-mode))
-  ;; ))
-
-#+END_SRC
-* OCaml
-#+BEGIN_SRC emacs-lisp
-  ;;  OCaml code
-
-    ;; (add-hook
-    ;;  'tuareg-mode-hook
-    ;;  (lambda ()
-    ;;    ;; Add opam emacs directory to the load-path
-    ;;    (setq opam-share
-    ;;      (substring
-    ;; 	(shell-command-to-string "opam config var share 2> /dev/null")
-    ;; 	0 -1))
-    ;;    (add-to-list 'load-path (concat opam-share "/emacs/site-lisp"))
-    ;;    ;; Load merlin-mode
-    ;;    (require 'merlin)
-    ;;    ;; Start merlin on ocaml files
-    ;;    (add-hook 'tuareg-mode-hook 'merlin-mode t)
-    ;;    (add-hook 'caml-mode-hook 'merlin-mode t)
-    ;;    ;; Enable auto-complete
-    ;;    (setq merlin-use-auto-complete-mode 'easy)
-    ;;    ;; Use opam switch to lookup ocamlmerlin binary
-    ;;    (setq merlin-command 'opam)
-    ;;    (company-mode)
-    ;;    (require 'ocp-indent)
-    ;;    (autoload 'utop-minor-mode "utop" "Minor mode for utop" t)
-    ;;    (autoload 'utop-setup-ocaml-buffer "utop" "Toplevel for OCaml" t)
-    ;;    (autoload 'merlin-mode "merlin" "Merlin mode" t)
-    ;;    (utop-minor-mode)
-    ;;    (company-quickhelp-mode)
-    ;;    ;; Important to note that setq-local is a macro and it needs to be
-    ;;    ;; separate calls, not like setq
-    ;;    (setq-local merlin-completion-with-doc t)
-    ;;    (setq-local indent-tabs-mode nil)
-    ;;    (setq-local show-trailing-whitespace t)
-    ;;    (setq-local indent-line-function 'ocp-indent-line)
-    ;;    (setq-local indent-region-function 'ocp-indent-region)
-    ;;    (if (equal system-type 'darwin)
-    ;; 	 (load-file "/Users/Edgar/.opam/working/share/emacs/site-lisp/ocp-indent.el")
-    ;;      (load-file "/home/gar/.opam/working/share/emacs/site-lisp/ocp-indent.el"))
-    ;;    (merlin-mode)))
-
-    ;; (add-hook 'utop-mode-hook (lambda ()
-    ;; 		  (set-process-query-on-exit-flag
-    ;; 		   (get-process "utop") nil)))
-    
-#+END_SRC
-* Java
-#+BEGIN_SRC emacs-lisp
-#+END_SRC
-* Julia
+* julia
 #+BEGIN_SRC emacs-lisp
 (use-package julia-mode
 :ensure t
+:config (eglot-jl-init)
 
 )
+(add-hook 'julia-mode-hook 'eglot-ensure)
+(define-key eglot-mode-map (kbd "C-c C-t") 'eldoc)
+(add-hook 'before-save-hook 'eglot-format)
 
+#+END_SRC
+* Web
+#+BEGIN_SRC emacs-lisp
+(use-package web-mode
+:ensure t
+:config
+(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.jinja2?\\'" . web-mode))
+(setq web-mode-engines-alist
+'(("django"    . "\\.html\\'")))
+(setq web-mode-ac-sources-alist
+'(("css" . (ac-source-css-property))
+("html" . (ac-source-words-in-buffer ac-source-abbrev))))
+
+(setq web-mode-enable-auto-closing t)
+(setq web-mode-enable-auto-quoting t)) 
+
+(use-package json-mode
+:ensure t
+)
+(use-package svelte-mode
+  :ensure t
+  :init)
+(add-to-list 'auto-mode-alist '("\\.svx\\'" . svelte-mode))
 #+END_SRC
