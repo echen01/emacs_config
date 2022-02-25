@@ -31,7 +31,7 @@
  '(js-indent-level 2)
  '(objed-cursor-color "#964C7B")
  '(package-selected-packages
-   '(eglot lsp-julia lsp-mode eglot-jl quelpa flycheck-julia jupyter auto-complete which-key use-package undo-tree try treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil svelte-mode py-autopep8 org-bullets material-theme git-gutter flycheck elpy counsel color-theme-sanityinc-tomorrow centaur-tabs blacken all-the-icons))
+   '(yasnippet-snippets company-auctex eglot lsp-julia lsp-mode eglot-jl quelpa flycheck-julia jupyter auto-complete which-key use-package undo-tree try treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil svelte-mode py-autopep8 org-bullets material-theme git-gutter flycheck elpy counsel color-theme-sanityinc-tomorrow centaur-tabs blacken all-the-icons))
  '(pdf-view-midnight-colors (cons "#FFFFFF" "#27212E"))
  '(rustic-ansi-faces
    ["#27212E" "#964C7B" "#74DFC4" "#FFE261" "#40B4C4" "#EB64B9" "#B4DCE7" "#FFFFFF"])
@@ -70,6 +70,10 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:family "Fira Code" :foundry "CTDB" :slant normal :weight normal :height 132 :width normal))))
- '(aw-leading-char-face ((t (:inherit ace-jump-face-foreground :height 3.0)))))
+ '(default ((t (:family "Fira Code" :foundry "CTDB" :slant normal :weight normal :height 120 :width normal))))
+ '(aw-leading-char-face ((t (:inherit ace-jump-face-foreground :height 3.0))))
+ '(flycheck-error ((t (:underline (:color "#e95678" :style wave)))))
+ '(flycheck-info ((t (:underline (:color "#09f7a0" :style wave)))))
+ '(flycheck-warning ((t (:underline (:color "#fab795" :style wave)))))
+ '(merlin-compilation-error-face ((t (:inherit compilation-error)))))
 
