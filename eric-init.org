@@ -26,7 +26,8 @@
   ;;                  args)))
   ;;     (apply orig-fn args_)))
 
-  ;;(advice-add 'define-obsolete-function-alias :around #'wrap-obsolete)
+  ;;(advice-add 'define-obsolete-function-alias :around #'wrap-obsolete
+(global-set-key (kbd "C-x C-o") 'ff-find-other-file)
 #+END_SRC
 * ibuffer
 #+BEGIN_SRC emacs-lisp
@@ -116,6 +117,7 @@ Brings up some help
 
 * latex
 #+BEGIN_SRC emacs-lisp
+(setenv "PATH" "/usr/local/texlive/2022/bin/x86_64-linux:$PATH" t)
 (dolist (hook '(LaTeX-mode-hook))
 (add-hook hook (lambda () (flyspell-mode 1))))
 #+END_SRC
@@ -461,4 +463,14 @@ Brings up some help
 
 
 
-
+* GLSL
+#+BEGIN_SRC emacs-lisp
+(use-package glsl-mode
+:ensure t
+:config
+(autoload 'glsl-mode "glsl-mode" nil t)
+(add-to-list 'auto-mode-alist '("\\.vs\\'" . glsl-mode))
+(add-to-list 'auto-mode-alist '("\\.fs\\'" . glsl-mode))
+(add-to-list 'auto-mode-alist '("\\.gs\\'" . glsl-mode))
+)
+#+END_SRC
